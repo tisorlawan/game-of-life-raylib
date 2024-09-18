@@ -63,30 +63,26 @@ void introduce_disturbance(int *cells) {
 
 int main(void) {
     srand(time(NULL));
-    InitWindow(800, 800, "Game Of LiFE");
+    InitWindow(WIN_WIDTH, WIN_HEIGHT, "Game Of LiFE");
     SetTargetFPS(60);
 
     bool close = false;
     bool paused = true;
 
-    Color box_color = GREEN;
-
     int frame_counter = 0;
-    int act_frame = 2;
+    int act_frame = 6;
     int disturbance_counter = 0;
 
-    printf("%d\n", N_CELLS);
-
-    int cells[N_CELLS] = {0};
-    int new_cells[N_CELLS] = {0};
+    int cells[N_CELLS];
+    int new_cells[N_CELLS];
 
     initialize_grid(cells, N_CELLS);
 
     while (!WindowShouldClose() && !close) {
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             Vector2 pos = GetMousePosition();
-            int col = pos.x / CELL_WIDTH;
-            int row = pos.y / CELL_HEIGHT;
+            int col = (int)pos.x / CELL_WIDTH;
+            int row = (int)pos.y / CELL_HEIGHT;
             if (col >= 0 && col < N_COLS && row >= 0 && row < N_ROWS) {
                 int index = CELL(col, row);
                 cells[index] = !cells[index];
@@ -98,6 +94,10 @@ int main(void) {
 
         if (IsKeyPressed(KEY_Q)) close = true;
         if (IsKeyPressed(KEY_SPACE)) paused = !paused;
+        if (IsKeyPressed(KEY_D)) {
+            introduce_disturbance(cells);
+            disturbance_counter = 0;
+        }
 
         if (!paused && (frame_counter + 1) % act_frame == 0) {
             frame_counter = 0;
@@ -128,11 +128,8 @@ int main(void) {
                 if (row < N_ROWS - 1 && col < N_COLS - 1) neighbor += cells[CELL(col + 1, row + 1)];
                 */
 
-                if (cells[i]) {
-                    new_cells[i] = (neighbor == 2 || neighbor == 3) ? 1 : 0;
-                } else {
-                    new_cells[i] = (neighbor == 3) ? 1 : 0;
-                }
+                new_cells[i] =
+                    (cells[i] && (neighbor == 2 || neighbor == 3)) || (!cells[i] && neighbor == 3);
             }
 
             memcpy(cells, new_cells, sizeof(cells));
@@ -142,7 +139,6 @@ int main(void) {
                 introduce_disturbance(cells);
                 disturbance_counter = 0;
             }
-
         } else {
             frame_counter += 1;
         }
@@ -163,7 +159,7 @@ int main(void) {
         if (paused) {
             DrawText("Paused", 10, 10, 10, RED);
             DrawText("Press SPACE to pause/resume", 10, 40, 20, DARKGRAY);
-            /* DrawText("Click to toggle cells", 10, 70, 20, DARKGRAY); */
+            DrawText("Click to toggle cells", 10, 70, 20, DARKGRAY);
         }
 
         EndDrawing();
