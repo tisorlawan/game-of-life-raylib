@@ -17,14 +17,6 @@
 
 #define CELL(x, y) ((y) * N_ROWS + (x))
 
-void place_glider(int *cells, int x, int y) {
-    cells[CELL(x, y)] = 1;
-    cells[CELL(x + 1, y + 1)] = 1;
-    cells[CELL(x + 2, y + 1)] = 1;
-    cells[CELL(x, y + 2)] = 1;
-    cells[CELL(x + 1, y + 2)] = 1;
-}
-
 void place_gosper_glider_gun(int *cells, int x, int y) {
     int gun[][2] = {{0, 4},  {0, 5},  {1, 4},  {1, 5},  {10, 4}, {10, 5}, {10, 6}, {11, 3},
                     {11, 7}, {12, 2}, {12, 8}, {13, 2}, {13, 8}, {14, 5}, {15, 3}, {15, 7},
@@ -37,20 +29,20 @@ void place_gosper_glider_gun(int *cells, int x, int y) {
     }
 }
 
+void place_breeder(int *cells, int x, int y) {
+    place_gosper_glider_gun(cells, x, y);
+    for (int i = 0; i < 5; i++) {
+        cells[CELL(x + 120 + i * 20, y + 80)] = 1;
+        cells[CELL(x + 121 + i * 20, y + 80)] = 1;
+        cells[CELL(x + 120 + i * 20, y + 81)] = 1;
+        cells[CELL(x + 121 + i * 20, y + 81)] = 1;
+    }
+}
+
 void initialize_grid(int *cells, int N) {
     memset(cells, 0, N * sizeof(int));
 
-    place_gosper_glider_gun(cells, 1, 1);
-    place_gosper_glider_gun(cells, 1, N_ROWS - 40);
-    place_gosper_glider_gun(cells, N_COLS - 40, 1);
-    place_gosper_glider_gun(cells, N_COLS - 40, N_ROWS - 40);
-
-    // Add random noise
-    for (int i = 0; i < N / 10; i++) {
-        int x = rand() % N_COLS;
-        int y = rand() % N_ROWS;
-        cells[CELL(x, y)] = 1;
-    }
+    place_breeder(cells, 10, 10);
 }
 
 void introduce_disturbance(int *cells) {
@@ -70,8 +62,7 @@ int main(void) {
     bool paused = true;
 
     int frame_counter = 0;
-    int act_frame = 6;
-    int disturbance_counter = 0;
+    int act_frame = 2;
 
     int cells[N_CELLS];
     int new_cells[N_CELLS];
@@ -96,7 +87,6 @@ int main(void) {
         if (IsKeyPressed(KEY_SPACE)) paused = !paused;
         if (IsKeyPressed(KEY_D)) {
             introduce_disturbance(cells);
-            disturbance_counter = 0;
         }
 
         if (!paused && (frame_counter + 1) % act_frame == 0) {
@@ -108,16 +98,16 @@ int main(void) {
                 int neighbor = 0;
 
                 // Toroidal grid
-                for (int dy = -1; dy <= 1; dy++) {
-                    for (int dx = -1; dx <= 1; dx++) {
-                        if (dx == 0 && dy == 0) continue;
-                        int nx = (col + dx + N_COLS) % N_COLS;
-                        int ny = (row + dy + N_ROWS) % N_ROWS;
-                        neighbor += cells[CELL(nx, ny)];
-                    }
-                }
+                /* for (int dy = -1; dy <= 1; dy++) { */
+                /*     for (int dx = -1; dx <= 1; dx++) { */
+                /*         if (dx == 0 && dy == 0) continue; */
+                /*         int nx = (col + dx + N_COLS) % N_COLS; */
+                /*         int ny = (row + dy + N_ROWS) % N_ROWS; */
+                /*         neighbor += cells[CELL(nx, ny)]; */
+                /*     } */
+                /* } */
 
-                /* Normal Grid
+                /* Normal Grid */
                 if (row > 0) neighbor += cells[CELL(col, row - 1)];
                 if (row < N_ROWS - 1) neighbor += cells[CELL(col, row + 1)];
                 if (col > 0) neighbor += cells[CELL(col - 1, row)];
@@ -126,7 +116,6 @@ int main(void) {
                 if (row > 0 && col < N_COLS - 1) neighbor += cells[CELL(col + 1, row - 1)];
                 if (row < N_ROWS - 1 && col > 0) neighbor += cells[CELL(col - 1, row + 1)];
                 if (row < N_ROWS - 1 && col < N_COLS - 1) neighbor += cells[CELL(col + 1, row + 1)];
-                */
 
                 new_cells[i] =
                     (cells[i] && (neighbor == 2 || neighbor == 3)) || (!cells[i] && neighbor == 3);
@@ -134,11 +123,6 @@ int main(void) {
 
             memcpy(cells, new_cells, sizeof(cells));
 
-            disturbance_counter++;
-            if (disturbance_counter >= 500) {
-                introduce_disturbance(cells);
-                disturbance_counter = 0;
-            }
         } else {
             frame_counter += 1;
         }
