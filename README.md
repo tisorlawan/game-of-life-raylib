@@ -1,6 +1,8 @@
 # game-of-life-raylib
 
-https://github.com/user-attachments/assets/b3295fe1-3a5d-4df0-9c8a-002bc4af7a54
+https://github.com/user-attachments/assets/47d1bbf0-e72a-4a4f-b97b-e7359b6ea75c
+
+
 
 This project is an implementation of Conway's Game of Life using C and the Raylib library.
 
